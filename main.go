@@ -38,6 +38,18 @@ func main() {
 	}
 
 	for _, value := range friends {
-		db.Write("users", value.Name, User)
+		db.Write("users", value.Name, User{
+			Name:    value.Name,
+			Age:     value.Age,
+			Contact: value.Contact,
+			Company: value.Company,
+			Address: value.Address,
+		})
 	}
+
+	records, err := db.ReadAll("users")
+	if err != nil {
+		fmt.Println("Error", err)
+	}
+	fmt.Println(records)
 }
