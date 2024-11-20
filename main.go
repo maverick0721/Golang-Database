@@ -3,7 +3,11 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
+
+	"github.com/jcelliott/lumber"
 )
 
 const Version = "1.0.0"
@@ -25,6 +29,61 @@ type (
 		log     Logger
 	}
 )
+
+type Options struct {
+	Logger
+}
+
+func New(dir string, options *Options) (*Driver, error) {
+	dir = filepath.Clean(dir)
+
+	opts := Options{}
+
+	if options != nil {
+		opts = *options
+	}
+
+	if opts.Logger == nil {
+		opts.Logger = lumber.NewConsoleLogger((lumber.INFO))
+	}
+
+	driver := Driver{
+		dir:     dir,
+		log:     opts.Logger,
+		mutexes: make(map[string]*sync.Mutex),
+	}
+
+	if _, err := os.Stat(dir); err == nil {
+		opts.Logger.Debug("using '%s' (database already exists)\n", dir)
+		return &driver, nil
+	}
+
+	opts.Logger.Debug("Creating the database at '%s'\n", dir)
+	return &driver, os.MkdirAll(dir, 0755)
+}
+
+func (d *Driver) Write() error {
+
+}
+
+func (d *Driver) Read() error {
+
+}
+func (d *Driver) ReadAll() error {
+
+}
+func (d *Driver) Delete() error {
+
+}
+func (d *Driver) getOrCreateMutex() *sync.Mutex {
+
+}
+
+func stat(path string) (fi os.FileInfo, err error) {
+	if fi, err = os.Stat(path); os.IsNotExist(err) {
+		fi, err = os.Stat(path + ".json")
+	}
+}
 
 type Address struct {
 	City    string
