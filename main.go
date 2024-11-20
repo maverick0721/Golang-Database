@@ -3,6 +3,27 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
+)
+
+const Version = "1.0.0"
+
+type (
+	Logger interface {
+		Fatal(string, ...interface{})
+		Error(string, ...interface{})
+		Warn(string, ...interface{})
+		Info(string, ...interface{})
+		Debug(string, ...interface{})
+		Trace(string, ...interface{})
+	}
+
+	Driver struct {
+		mutex   sync.Mutex
+		mutexes map[string]*sync.Mutex
+		dir     string
+		log     Logger
+	}
 )
 
 type Address struct {
@@ -64,8 +85,12 @@ func main() {
 	}
 	fmt.Println((allusers))
 
-	if err := db.Delete("users", "Yash"); err != nil {
-		fmt.Println("Error", err)
-	}
+	// if err := db.Delete("users", "Yash"); err != nil {
+	// 	fmt.Println("Error", err)
+	// }
+
+	// if err := db.Delete("users", ""); err != nil {
+	// 	fmt.Println("Error", err)
+	// }
 
 }
