@@ -95,19 +95,73 @@ func (d *Driver) Write(collection, resource string, v interface{}) error {
 		return err
 	}
 
+	return os.Rename(tmpPath, fnlPath)
 }
 
-func (d *Driver) Read() error {
+func (d *Driver) Read(collection, resource string, v interface{}) error {
+	if collection == "" {
+		return fmt.Errorf("collection is required (can't read record!)")
+	}
 
-}
-func (d *Driver) ReadAll() error {
+	if resource == "" {
+		return fmt.Errorf("resource is required (can't read record!)")
+	}
 
+	record := filepath.Join(d.dir, collection, resource+".json")
+
+	if _, err := stat(record); err != nil {
+		return err
+	}
+
+	b, err := ioutil.ReadFile(record)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(b, &v)
 }
+
+func (d *Driver) ReadAll(collection string) ([]string, error) {
+	if collection == "" {
+		return nil, fmt.Errorf("collection is required (can't read all records!)")
+	}
+
+	dir := filepath.Join(d.dir, collection)
+
+	if _, err := stat(dir); err != nil {
+		return nil, err
+	}
+
+	files, _ := ioutil.ReadDir(dir)
+
+	var records []string
+
+	for _, file := range files {
+		b, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
+		if err != nil {
+			return records, err
+		}
+
+		records = append(records, string(b))
+	}
+	return records, nil
+}
+
 func (d *Driver) Delete() error {
 
 }
-func (d *Driver) getOrCreateMutex() *sync.Mutex {
+func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
 
+	d.mutex.Lock()
+	defer d.mutex.Unlock()
+	m, ok := d.mutexes[collection]
+
+	if !ok {
+		m = &sync.Mutex{}
+		d.mutexes[collection] = m
+	}
+
+	return m
 }
 
 func stat(path string) (fi os.FileInfo, err error) {
