@@ -1,0 +1,12 @@
+{
+	"Name": "Manav",
+	"Age": 20,
+	"Contact": "0987653333",
+	"Company": "Adobe",
+	"Address": {
+		"City": "Bangalore",
+		"State": "Karnataka",
+		"Country": "India",
+		"Pincode": 560001
+	}
+}

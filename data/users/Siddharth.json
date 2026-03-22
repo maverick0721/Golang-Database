@@ -1,0 +1,12 @@
+{
+	"Name": "Siddharth",
+	"Age": 22,
+	"Contact": "0987654444",
+	"Company": "Microsoft",
+	"Address": {
+		"City": "Bangalore",
+		"State": "Karnataka",
+		"Country": "India",
+		"Pincode": 560001
+	}
+}

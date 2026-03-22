@@ -1,0 +1,12 @@
+{
+	"Name": "Priyanshu",
+	"Age": 21,
+	"Contact": "0987650000",
+	"Company": "Amazon",
+	"Address": {
+		"City": "Bangalore",
+		"State": "Karnataka",
+		"Country": "India",
+		"Pincode": 560001
+	}
+}

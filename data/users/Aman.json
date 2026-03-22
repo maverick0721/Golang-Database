@@ -1,0 +1,12 @@
+{
+	"Name": "Aman",
+	"Age": 21,
+	"Contact": "0987651111",
+	"Company": "Apple",
+	"Address": {
+		"City": "Gwalior",
+		"State": "Madhya Pradesh",
+		"Country": "India",
+		"Pincode": 474011
+	}
+}

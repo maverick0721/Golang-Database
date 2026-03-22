@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sync"
@@ -91,7 +90,7 @@ func (d *Driver) Write(collection, resource string, v interface{}) error {
 
 	b = append(b, byte('\n'))
 
-	if err := ioutil.WriteFile(tmpPath, b, 0644); err != nil {
+	if err := os.WriteFile(tmpPath, b, 0644); err != nil {
 		return err
 	}
 
@@ -113,12 +112,12 @@ func (d *Driver) Read(collection, resource string, v interface{}) error {
 		return err
 	}
 
-	b, err := ioutil.ReadFile(record)
+	b, err := os.ReadFile(record)
 	if err != nil {
 		return err
 	}
 
-	return json.Unmarshal(b, &v)
+	return json.Unmarshal(b, v)
 }
 
 func (d *Driver) ReadAll(collection string) ([]string, error) {
@@ -132,12 +131,19 @@ func (d *Driver) ReadAll(collection string) ([]string, error) {
 		return nil, err
 	}
 
-	files, _ := ioutil.ReadDir(dir)
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
 
 	var records []string
 
 	for _, file := range files {
-		b, err := ioutil.ReadFile(filepath.Join(dir, file.Name()))
+		if file.IsDir() {
+			continue
+		}
+
+		b, err := os.ReadFile(filepath.Join(dir, file.Name()))
 		if err != nil {
 			return records, err
 		}
@@ -147,7 +153,25 @@ func (d *Driver) ReadAll(collection string) ([]string, error) {
 	return records, nil
 }
 
-func (d *Driver) Delete() error {
+func (d *Driver) Delete(collection, resource string) error {
+	if collection == "" {
+		return fmt.Errorf("collection is required (can't delete record!)")
+	}
+
+	if resource == "" {
+		return fmt.Errorf("resource is required (can't delete record!)")
+	}
+
+	mutex := d.getOrCreateMutex(collection)
+	mutex.Lock()
+	defer mutex.Unlock()
+
+	record := filepath.Join(d.dir, collection, resource+".json")
+	if _, err := stat(record); err != nil {
+		return err
+	}
+
+	return os.Remove(record)
 
 }
 func (d *Driver) getOrCreateMutex(collection string) *sync.Mutex {
@@ -168,6 +192,8 @@ func stat(path string) (fi os.FileInfo, err error) {
 	if fi, err = os.Stat(path); os.IsNotExist(err) {
 		fi, err = os.Stat(path + ".json")
 	}
+
+	return fi, err
 }
 
 type Address struct {
@@ -186,14 +212,15 @@ type User struct {
 }
 
 func main() {
-	dir := "./"
+	dir := "./data"
 
 	db, err := New(dir, nil)
 	if err != nil {
 		fmt.Println("Error", err)
+		return
 	}
 
-	friends = []User{
+	friends := []User{
 		{"Yash", "21", "0987654321", "Google", Address{"Bangalore", "Karnataka", "India", "560001"}},
 		{"Siddharth", "22", "0987654444", "Microsoft", Address{"Bangalore", "Karnataka", "India", "560001"}},
 		{"Manav", "20", "0987653333", "Adobe", Address{"Bangalore", "Karnataka", "India", "560001"}},
@@ -203,13 +230,16 @@ func main() {
 	}
 
 	for _, value := range friends {
-		db.Write("users", value.Name, User{
+		err := db.Write("users", value.Name, User{
 			Name:    value.Name,
 			Age:     value.Age,
 			Contact: value.Contact,
 			Company: value.Company,
 			Address: value.Address,
 		})
+		if err != nil {
+			fmt.Println("Error", err)
+		}
 	}
 
 	records, err := db.ReadAll("users")
@@ -222,8 +252,9 @@ func main() {
 
 	for _, f := range records {
 		userFound := User{}
-		if err := json.Unmarshal([]byte(f), userFound); err != nil {
+		if err := json.Unmarshal([]byte(f), &userFound); err != nil {
 			fmt.Println("Error", err)
+			continue
 		}
 		allusers = append(allusers, userFound)
 	}

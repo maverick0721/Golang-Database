@@ -1,0 +1,12 @@
+{
+	"Name": "Yash",
+	"Age": 21,
+	"Contact": "0987654321",
+	"Company": "Google",
+	"Address": {
+		"City": "Bangalore",
+		"State": "Karnataka",
+		"Country": "India",
+		"Pincode": 560001
+	}
+}
